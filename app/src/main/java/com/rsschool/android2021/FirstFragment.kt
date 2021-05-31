@@ -1,14 +1,21 @@
 package com.rsschool.android2021
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 
+interface OpenSecondFragmentActionListener {
+    fun openSecondFragmentAction(min: Int, max: Int)
+}
+
 class FirstFragment : Fragment() {
+    private var listener: OpenSecondFragmentActionListener? = null
 
     private var generateButton: Button? = null
     private var previousResult: TextView? = null
@@ -21,19 +28,31 @@ class FirstFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_first, container, false)
     }
 
+    override fun onAttach(context: Context) {
+        listener = context as OpenSecondFragmentActionListener
+        super.onAttach(context)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        previousResult = view.findViewById(R.id.previous_result)
-        generateButton = view.findViewById(R.id.generate)
 
         val result = arguments?.getInt(PREVIOUS_RESULT_KEY)
+        val minView = view.findViewById<EditText>(R.id.min_value)
+        val maxView = view.findViewById<EditText>(R.id.max_value)
+
+        previousResult = view.findViewById(R.id.previous_result)
+        generateButton = view.findViewById(R.id.generate)
         previousResult?.text = "Previous result: ${result.toString()}"
 
-        // TODO: val min = ...
-        // TODO: val max = ...
-
         generateButton?.setOnClickListener {
-            // TODO: send min and max to the SecondFragment
+            val min = minView.text.toString().toIntOrNull()
+            val max = maxView.text.toString().toIntOrNull()
+            when {
+                min == null -> minView.error = "Enter min value"
+                max == null -> maxView.error = "Enter max value"
+                min >= max -> maxView.error = "Max value must be bigger than min"
+                else -> listener?.openSecondFragmentAction(min, max)
+            }
         }
     }
 
